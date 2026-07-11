@@ -97,8 +97,9 @@ Confidence Score
    ▼
 
 Interactive Dashboard
+```
 
-
+---
 
 # 🚀 Technologies Used
 
