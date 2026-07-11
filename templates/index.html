@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StressAI | Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="min-h-screen">
+
+<header class="text-white px-8 py-4 shadow-lg flex items-center justify-between">
+    <a href="/" class="text-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all">
+        🧘‍♀️ <span>StressAI</span>
+    </a>
+    <div class="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+        BERT Analysis v1.0
+    </div>
+</header>
+
+<main class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 md:p-10">
+
+    <section class="lg:col-span-2 bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/50">
+        <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Analyze Your Mind</h2>
+        <p class="text-slate-500 mb-8">Type your thoughts below. Our BERT model predicts stress based on linguistic patterns.</p>
+
+        <textarea id="userInput" placeholder="How are you feeling?"
+            class="w-full h-64 p-5 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-teal-200 transition-all bg-white/50 resize-none shadow-inner"></textarea>
+
+        <button id="predictBtn" onclick="getPrediction()"
+            class="mt-6 flex items-center justify-center gap-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white px-12 py-4 rounded-2xl font-bold shadow-xl transition-all hover:scale-105 active:scale-95">
+            <span id="btnText">Predict Stress Level</span>
+            <div id="spinner" class="hidden animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+        </button>
+
+        <div id="resultBox" class="result-card hidden mt-10 text-center">
+            <h3 class="text-slate-400 text-xs uppercase tracking-widest mb-4">Inference Result</h3>
+            <p id="predictionText" class="text-2xl font-bold text-slate-800"></p>
+            <div id="statusDisplay" class="mt-8 flex justify-center"></div>
+        </div>
+    </section>
+
+    <aside class="flex flex-col gap-6">
+        <div class="bg-white/70 backdrop-blur-md rounded-3xl shadow-xl p-8 border border-white/50">
+            <h3 class="text-lg font-bold text-slate-800 mb-5">Stress Levels</h3>
+            <div class="space-y-4">
+                <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 text-emerald-800 text-sm">
+                    <strong>Emerald</strong> — Low stress, calm and balanced mental state.
+                </div>
+                <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 text-amber-800 text-sm">
+                    <strong>Amber</strong> — Mild stress, emotional fatigue or pressure. 
+                </div>
+                <div class="p-4 rounded-2xl bg-red-50/50 border border-red-100 text-red-800 text-sm">
+                    <strong>Red</strong> — High stress, anxiety or mental overload.
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/70 backdrop-blur-md rounded-3xl shadow-xl p-8 border border-white/50 text-center flex-grow">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Session Distribution</h3>
+            <div class="relative h-64 flex justify-center">
+                 <canvas id="stressChart"></canvas>
+            </div>
+            <div class="mt-6 flex justify-center gap-6 text-xs font-bold uppercase tracking-widest">
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Low Stress</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Mild Stress </div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span> High Stress</div>
+            </div>
+        </div>
+    </aside>
+</main>
+
+<script>
+let stressChart;
+
+window.onload = () => {
+    const ctx = document.getElementById('stressChart').getContext('2d');
+    stressChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Low Stress', 'Mild Stress', 'High Stress'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                hoverOffset: 15,
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+};
+
+async function getPrediction() {
+    const text = document.getElementById('userInput').value;
+    const resultBox = document.getElementById('resultBox');
+    const predictionText = document.getElementById('predictionText');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const btn = document.getElementById('predictBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+
+    if (!text.trim()) return alert("Please share your thoughts first!");
+
+    btn.disabled = true;
+    spinner.classList.remove('hidden');
+    btnText.innerText = "Analyzing...";
+    resultBox.classList.add('hidden');
+
+    try {
+        const response = await fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+        
+        // Reset animation and classes
+        resultBox.className = "result-card mt-10 text-center fade-in";
+        statusDisplay.innerHTML = ''; 
+
+        let isHigh = false;
+        let pillColor = "";
+        let label = "";
+
+        // CORRECT COLOR MAPPING: No Stress = Emerald, High = Red
+        if (data.prediction.includes("Low Stress")) {
+            resultBox.classList.add('result-low'); // Emerald border
+            pillColor = "bg-emerald-500";
+            label = "Low Stress";
+            stressChart.data.datasets[0].data=[1,0,0];
+        } 
+        else if(data.prediction.includes("Mild Stress")){
+            resultBox.classList.add('result-medium');
+            pillColor="bg-amber-500";
+            label="Mild Stress";
+            stressChart.data.datasets[0].data=[0,1,0];
+        }
+        else {
+            resultBox.classList.add('result-high'); // Red border
+            pillColor = "bg-red-500";
+            label = "High Stress";
+            stressChart.data.datasets[0].data=[0,0,1];
+        }
+
+        // Reset and Update Chart to show only the CURRENT prediction (100% of one color)
+        stressChart.update();
+
+        statusDisplay.innerHTML = `
+            <div class="px-12 py-4 rounded-full ${pillColor} text-white shadow-2xl font-black text-lg uppercase tracking-wider animate-bounce-short">
+                ${label}
+            </div>`;
+        
+        predictionText.innerText = data.prediction;
+        resultBox.classList.remove('hidden');
+
+    } catch (e) {
+        alert("Server connection failed!");
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.innerText = "Predict Stress Level";
+    }
+}
+</script>
+
+</body>
+</html> 
