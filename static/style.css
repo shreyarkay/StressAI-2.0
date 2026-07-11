@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: linear-gradient(135deg, #ccfbff 0%, #ef96c5 50%, #7ee8fa 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+/* Landing Page Orbs */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    z-index: -1;
+    animation: float 20s infinite alternate ease-in-out;
+}
+.orb-1 { width: 500px; height: 500px; background: #ccfbff; top: -10%; left: -10%; }
+.orb-2 { width: 600px; height: 600px; background: #fbcfe8; bottom: -10%; right: -10%; animation-delay: -5s; }
+.orb-3 { width: 400px; height: 400px; background: #99f6e4; bottom: 20%; left: 20%; animation-delay: -10s; }
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+/* Header */
+header {
+    background: linear-gradient(90deg, #0d9488, #2563eb);
+    backdrop-filter: blur(10px);
+}
+
+/* Dashboard Cards */
+.result-card {
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Stress Level Accent Borders */
+.result-none { border-top: 8px solid #94a3b8 !important; }
+.result-low { border-top: 8px solid #10b981 !important; 
+    background: rgba(16, 185, 129, 0.08);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);}
+.result-medium { border-top: 8px solid #f59e0b !important; 
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);}
+.result-high { border-top: 8px solid #ef4444 !important; 
+    background: rgba(239, 68, 68, 0.08);
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.15);}
+
+.fade-in {
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-bounce-short {
+    animation: bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
